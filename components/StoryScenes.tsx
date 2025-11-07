@@ -9,6 +9,11 @@ export const IntroScene: React.FC<SceneProps> = ({ onNext }) => {
         <div className="w-full max-w-2xl flex flex-col items-center gap-8 animate-fade-in">
             <Character name="سارة" emoji="👩🏻‍🦱" />
             <Card className="text-center">
+                {/* رسالة الإهداء */}
+                <div className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 py-3 px-4 rounded-xl mb-6 text-base font-bold shadow-sm border border-purple-200">
+                    💝 تم إعداد هذه اللعبة لطالبات المعلمة إيمان عائض الزهراني 💝
+                </div>
+
                 <h1 className="text-3xl font-bold text-purple-900 mb-6">مغامرة في عالم الأرقام</h1>
                 <p className="text-lg text-gray-700 mb-6 leading-relaxed">
                     بينما كانت سارة تتجول في مكتبة المدرسة القديمة، لفت انتباهها كتاب غريب يتوهج بضوء خافت.
