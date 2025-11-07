@@ -11,9 +11,16 @@ export const PerilousPathScene: React.FC<SceneProps> = ({ onNext }) => {
     const [steps, setSteps] = useState(0);
     const [lives, setLives] = useState(3);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | 'reset' | null>(null);
+    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     
     const stepsNeeded = 5;
+
+    useEffect(() => {
+        if (steps > 0) {
+           playSound('swoosh');
+        }
+    }, [problem]);
 
     const handleAnswer = (option: number) => {
         if (feedback) return;
@@ -21,10 +28,12 @@ export const PerilousPathScene: React.FC<SceneProps> = ({ onNext }) => {
         setSelectedAnswer(option);
         if (option === problem.answer) {
             setFeedback('correct');
-            playSound('correct');
+            setFeedbackMessage('صحيح!');
+            playSound('success');
             setSteps(s => s + 1);
         } else {
             setFeedback('wrong');
+            setFeedbackMessage('خطأ!');
             playSound('crumble');
             setLives(l => l - 1);
         }
@@ -37,6 +46,7 @@ export const PerilousPathScene: React.FC<SceneProps> = ({ onNext }) => {
             } else if (lives - 1 <= 0) {
                 // Game over, reset
                 setFeedback('reset');
+                setFeedbackMessage('انهار الممر! لنبدأ من جديد.');
                 setTimeout(() => {
                     setLives(3);
                     setSteps(0);
@@ -44,7 +54,10 @@ export const PerilousPathScene: React.FC<SceneProps> = ({ onNext }) => {
                 }, 1500);
             }
             setSelectedAnswer(null);
-            if (feedback !== 'reset') setFeedback(null);
+            if (feedback !== 'reset') {
+                setFeedback(null);
+                setFeedbackMessage(null);
+            }
         }, 1500);
     };
 
@@ -85,6 +98,14 @@ export const PerilousPathScene: React.FC<SceneProps> = ({ onNext }) => {
                             {/* FIX: Check for part type before accessing 'value' property to avoid error on 'input' type parts. */}
                             {problem.questionParts.map(p => p.type === 'text' ? p.value : '?').join('')}
                         </h3>
+                    </div>
+
+                    <div className="h-10 my-2 flex items-center justify-center">
+                         {feedbackMessage && (
+                            <p className={`text-2xl font-bold animate-pop-in ${feedback === 'correct' ? 'text-cyan-300' : 'text-red-400'}`}>
+                                {feedbackMessage}
+                            </p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

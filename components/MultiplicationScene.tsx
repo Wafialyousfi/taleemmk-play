@@ -28,9 +28,17 @@ export const SecretCipherScene: React.FC<SceneProps> = ({ onNext }) => {
     const [problem, setProblem] = useState<Problem>(generateNewProblem('cipher'));
     const [ciphersSolved, setCiphersSolved] = useState(0);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [inputValue, setInputValue] = useState('');
 
     const ciphersNeeded = 3;
+
+    useEffect(() => {
+        // Play sound when a new problem appears, but not on the initial load
+        if (ciphersSolved > 0) {
+           playSound('swoosh');
+        }
+    }, [problem]);
 
     const handleSubmit = () => {
         if (!inputValue) return;
@@ -38,11 +46,13 @@ export const SecretCipherScene: React.FC<SceneProps> = ({ onNext }) => {
         
         if (answer === problem.answer) {
             setFeedback('correct');
-            playSound('correct');
+            setFeedbackMessage('إجابة صحيحة!');
+            playSound('success');
             setCiphersSolved(c => c + 1);
         } else {
             setFeedback('wrong');
-            playSound('wrong');
+            setFeedbackMessage('حاول مرة أخرى!');
+            playSound('failure');
         }
 
         setTimeout(() => {
@@ -50,6 +60,7 @@ export const SecretCipherScene: React.FC<SceneProps> = ({ onNext }) => {
                 setProblem(generateNewProblem('cipher'));
             }
             setFeedback(null);
+            setFeedbackMessage(null);
             setInputValue('');
         }, 1500);
     };
@@ -94,6 +105,14 @@ export const SecretCipherScene: React.FC<SceneProps> = ({ onNext }) => {
                     </div>
                     
                     {renderQuestion(problem.questionParts, inputValue, getFeedbackClass)}
+
+                    <div className="h-10 my-2 flex items-center justify-center">
+                         {feedbackMessage && (
+                            <p className={`text-2xl font-bold animate-pop-in ${feedback === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
+                                {feedbackMessage}
+                            </p>
+                        )}
+                    </div>
 
                     <InputPad
                         onInput={(num) => setInputValue(val => val.length < 5 ? val + num : val)}

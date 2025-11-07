@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SceneProps } from '../types';
 import { Button, Card, Character } from './UI';
 import { ArrowRight } from 'lucide-react';
@@ -11,9 +11,16 @@ export const VaultChallengeScene: React.FC<SceneProps> = ({ onNext }) => {
     const [currentProblemIndex, setCurrentProblemIndex] = useState(0);
     const [combination, setCombination] = useState<(number|null)[]>([null, null, null]);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
     const problem = problems[currentProblemIndex];
+
+    useEffect(() => {
+        if (currentProblemIndex > 0) {
+            playSound('swoosh');
+        }
+    }, [currentProblemIndex]);
     
     // Generate options for the current problem
     const options = React.useMemo(() => {
@@ -37,6 +44,7 @@ export const VaultChallengeScene: React.FC<SceneProps> = ({ onNext }) => {
 
         if (option === problem.answer) {
             setFeedback('correct');
+            setFeedbackMessage('رائع! تم كشف الرقم.');
             playSound('dial_click');
             const newCombination = [...combination];
             // Store the first digit of the answer for variety
@@ -48,14 +56,17 @@ export const VaultChallengeScene: React.FC<SceneProps> = ({ onNext }) => {
                     setCurrentProblemIndex(i => i + 1);
                 }
                 setFeedback(null);
+                setFeedbackMessage(null);
                 setSelectedAnswer(null);
             }, 1500);
 
         } else {
             setFeedback('wrong');
-            playSound('wrong');
+            setFeedbackMessage('إجابة خاطئة، حاول مجدداً!');
+            playSound('failure');
              setTimeout(() => {
                 setFeedback(null);
+                setFeedbackMessage(null);
                 setSelectedAnswer(null);
             }, 1500);
         }
@@ -99,6 +110,14 @@ export const VaultChallengeScene: React.FC<SceneProps> = ({ onNext }) => {
                             {/* FIX: Check for part type before accessing 'value' property to avoid error on 'input' type parts. */}
                             {problem.questionParts.map(p => p.type === 'text' ? p.value : '?').join('')}
                         </h3>
+                    </div>
+
+                     <div className="h-10 my-2 flex items-center justify-center">
+                         {feedbackMessage && (
+                            <p className={`text-2xl font-bold animate-pop-in ${feedback === 'correct' ? 'text-green-400' : 'text-red-400'}`}>
+                                {feedbackMessage}
+                            </p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

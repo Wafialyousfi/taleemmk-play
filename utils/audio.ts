@@ -1,19 +1,21 @@
 // Simple utility to play sounds using widely available sound effects suitable for demos.
 // In a production app, these should be replaced with local assets in the /public folder.
 
-const CORRECT_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'; // Simple cheerful chime
-const WRONG_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3'; // Gentle error buzzer
+const SUCCESS_SOUND = 'https://assets.mixkit.co/active_storage/sfx/1447/1447-preview.mp3'; // More celebratory success sound
+const FAILURE_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2029/2029-preview.mp3'; // Softer, less jarring failure sound
+const SWOOSH_SOUND = 'https://assets.mixkit.co/active_storage/sfx/1947/1947-preview.mp3'; // Swoosh sound for transitions
 const POP_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3'; // Pop sound for interactions
 const UNLOCK_SOUND = 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'; // Lock clink sound
 const CRUMBLE_SOUND = 'https://assets.mixkit.co/active_storage/sfx/197/197-preview.mp3'; // Rock crumble sound
 const DIAL_CLICK_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2111/2111-preview.mp3'; // Dial click sound
 
-export const playSound = (type: 'correct' | 'wrong' | 'pop' | 'unlock' | 'crumble' | 'dial_click') => {
+export const playSound = (type: 'success' | 'failure' | 'pop' | 'unlock' | 'crumble' | 'dial_click' | 'swoosh') => {
     try {
         let audioUrl;
         switch (type) {
-            case 'correct': audioUrl = CORRECT_SOUND; break;
-            case 'wrong': audioUrl = WRONG_SOUND; break;
+            case 'success': audioUrl = SUCCESS_SOUND; break;
+            case 'failure': audioUrl = FAILURE_SOUND; break;
+            case 'swoosh': audioUrl = SWOOSH_SOUND; break;
             case 'pop': audioUrl = POP_SOUND; break;
             case 'unlock': audioUrl = UNLOCK_SOUND; break;
             case 'crumble': audioUrl = CRUMBLE_SOUND; break;
@@ -21,7 +23,7 @@ export const playSound = (type: 'correct' | 'wrong' | 'pop' | 'unlock' | 'crumbl
         }
         if (audioUrl) {
             const audio = new Audio(audioUrl);
-            audio.volume = 0.5; // Keep it from being too loud
+            audio.volume = 0.6; // Keep it from being too loud
             audio.play().catch(e => console.warn("Audio play failed (likely due to browser autoplay policy without interaction first):", e));
         }
     } catch (e) {
