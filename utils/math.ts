@@ -1,190 +1,145 @@
-import { Problem, ProblemType, QuestionPart } from '../types';
 
-// Helper to get a random element from an array
-const randomElement = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+import { Problem, ProblemType } from '../types';
 
-// Helper for random number in a range
-const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// --- Problem Generators ---
+export const generateNewProblem = (stage: 'cipher' | 'path' | 'vault'): Problem => {
+    switch (stage) {
+        case 'cipher':
+            return generateCipherProblem();
+        case 'path':
+            return generatePathProblem();
+        case 'vault':
+            return generateVaultProblem();
+        default:
+            return generateCipherProblem();
+    }
+};
 
-const generateMultiplicationPattern = (): Problem => {
-    const baseA = randomInt(2, 9);
-    const baseB = randomInt(2, 9);
-    const zerosA = randomInt(1, 2);
-    const zerosB = randomInt(1, 2);
-    const numA = baseA * (10 ** zerosA);
-    const numB = baseB * (10 ** zerosB);
+// Stage 1: Multiplication Patterns (Secret Cipher)
+// Focus on multiples of 10, 100, 1000. e.g., 50 x 60 = 3000
+const generateCipherProblem = (): Problem => {
+    const base1 = randomInt(2, 9);
+    const base2 = randomInt(2, 9);
+    // Ensure we have some zeros to make it a pattern problem
+    const zeros1 = randomInt(0, 2); 
+    const zeros2 = randomInt(1, 3 - zeros1); 
+
+    const num1 = base1 * Math.pow(10, zeros1);
+    const num2 = base2 * Math.pow(10, zeros2);
+    const answer = num1 * num2;
 
     return {
         type: ProblemType.MULTIPLICATION_PATTERNS,
-        title: 'أكمل النمط',
+        title: 'أنماط الضرب',
         questionParts: [
-            { type: 'text', value: `${numA} × ${numB} = ` },
+            { type: 'text', value: `${num1} × ${num2} = ` },
             { type: 'input' }
         ],
-        answer: numA * numB,
+        answer
     };
 };
 
-const generateDivisionPattern = (): Problem => {
-    const divisorBase = randomInt(2, 9);
-    const quotientBase = randomInt(2, 9);
-    const zerosDivisor = randomInt(1, 2);
-    const zerosQuotient = randomInt(0, 1);
+// Stage 2: Division/Estimation (Perilous Path) - Multiple Choice
+const generatePathProblem = (): Problem => {
+    // Mix of estimation and division patterns
+    const isEstimation = Math.random() > 0.4;
 
-    const divisor = divisorBase * (10 ** zerosDivisor);
-    const quotient = quotientBase * (10 ** zerosQuotient);
-    const dividend = divisor * quotient;
+    if (isEstimation) {
+        // Estimation: 42 x 58 approx 40 x 60 = 2400
+        const num1 = randomInt(11, 99);
+        const num2 = randomInt(11, 99);
+        // Round to nearest ten
+        const rounded1 = Math.round(num1 / 10) * 10;
+        const rounded2 = Math.round(num2 / 10) * 10;
+        const answer = rounded1 * rounded2;
 
-    return {
-        type: ProblemType.DIVISION_PATTERNS,
-        title: 'أكمل نمط القسمة',
-        questionParts: [
-            { type: 'text', value: `${dividend} ÷ ${divisor} = ` },
-            { type: 'input' }
-        ],
-        answer: quotient,
-    };
-};
-
-const generateMultiplicationProperty = (): Problem => {
-    const a = randomInt(2, 9);
-    const b = randomInt(10, 20);
-    const c = randomInt(2, 9);
-    
-    // Using Associative Property as an example
-    return {
-        type: ProblemType.MULTIPLICATION_PROPERTIES,
-        title: 'استخدم خصائص الضرب',
-        questionParts: [
-            { type: 'text', value: `(${a} × ${b}) × ${c} = ${a} × (` },
-            { type: 'input' },
-            { type: 'text', value: ` × ${c})` }
-        ],
-        answer: b,
-    };
-}
-
-
-const generateEstimateProduct = (): Problem => {
-    const numA = randomInt(15, 95);
-    const numB = randomInt(15, 95);
-    const roundedA = Math.round(numA / 10) * 10;
-    const roundedB = Math.round(numB / 10) * 10;
-    const answer = roundedA * roundedB;
-
-    const options = new Set<number>([answer]);
-    while (options.size < 4) {
-        // Generate plausible wrong answers
-        const wrongAnswer = (Math.round(numA / 10) + randomInt(-1, 1)) * 10 * (Math.round(numB / 10) + randomInt(-1, 1)) * 10;
-        if (wrongAnswer !== answer && wrongAnswer > 0) options.add(wrongAnswer);
-    }
-
-    return {
-        type: ProblemType.ESTIMATE_PRODUCTS,
-        title: 'قدّر ناتج الضرب',
-        questionText: `قرّب كل عدد لأقرب عشرة ثم أوجد الناتج.`,
-        questionParts: [{ type: 'text', value: `${numA} × ${numB}` }],
-        answer,
-        options: Array.from(options).sort(() => Math.random() - 0.5),
-    };
-};
-
-const generateEstimateQuotient = (): Problem => {
-    const divisor = randomInt(4, 9);
-    const quotientApprox = randomInt(5, 15) * 10; // e.g., 50, 60...
-    const dividend = quotientApprox * divisor + randomInt(-5, 5); // A number close to a compatible one
-    const answer = quotientApprox;
-
-    const options = new Set<number>([answer]);
-    while (options.size < 4) {
-        const wrongAnswer = answer + randomInt(-2, 2) * 10;
-        if (wrongAnswer !== answer && wrongAnswer > 0) options.add(wrongAnswer);
-    }
-
-    return {
-        type: ProblemType.ESTIMATE_QUOTIENTS,
-        title: 'قدّر ناتج القسمة',
-        questionText: `استخدم الأعداد المتوافقة لتقدير الناتج.`,
-        questionParts: [{ type: 'text', value: `${dividend} ÷ ${divisor}` }],
-        answer,
-        options: Array.from(options).sort(() => Math.random() - 0.5),
-    };
-};
-
-const generateRemainderInterpretation = (): Problem => {
-    const scenarios = [
-        { // Scenario 1: Round up
-            template: (d: number, s: number) => `يريد ${d} طالبًا الذهاب في رحلة. كل حافلة تتسع لـ ${s} طالبًا. كم عدد الحافلات اللازمة لنقل جميع الطلاب؟`,
-            answer: (d: number, s: number) => Math.ceil(d / s)
-        },
-        { // Scenario 2: Ignore remainder
-            template: (d: number, s: number) => `لدى الخباز ${d} بيضة. كل كعكة تحتاج إلى ${s} بيضات. كم كعكة كاملة يمكنه خبزها؟`,
-            answer: (d: number, s: number) => Math.floor(d / s)
-        },
-        { // Scenario 3: The remainder is the answer
-            template: (d: number, s: number) => `قامت سارة بتوزيع ${d} قطعة حلوى بالتساوي على ${s} من صديقاتها. كم قطعة حلوى تبقى مع سارة؟`,
-            answer: (d: number, s: number) => d % s
+        // Generate plausible wrong options
+        const options = new Set<number>([answer]);
+        // Wrong rounding directions
+        options.add(Math.floor(num1 / 10) * 10 * Math.floor(num2 / 10) * 10);
+        options.add(Math.ceil(num1 / 10) * 10 * Math.ceil(num2 / 10) * 10);
+        // Random close estimations
+        while (options.size < 4) {
+             options.add(answer + (randomInt(0, 1) === 0 ? 100 : -100) * randomInt(1, 5));
         }
-    ];
+        // Ensure no negative options if accidentally generated
+        const finalOptions = Array.from(options).filter(n => n > 0).slice(0, 4);
+        while(finalOptions.length < 4) finalOptions.push(answer + finalOptions.length * 100 + 100);
 
-    const scenario = randomElement(scenarios);
-    const divisor = randomInt(4, 9);
-    const dividend = randomInt(divisor * 3 + 1, divisor * 6);
-    
-    const answer = scenario.answer(dividend, divisor);
-    const options = new Set<number>([answer, Math.floor(dividend/divisor), dividend % divisor, Math.ceil(dividend/divisor)]);
-     while (options.size < 4) {
-        const wrongAnswer = answer + randomInt(1, 3);
-        options.add(wrongAnswer);
+        return {
+            type: ProblemType.ESTIMATE_PRODUCTS,
+            title: 'تقدير نواتج الضرب',
+            questionText: 'قدّر الناتج بتقريب الأعداد إلى أقرب عشرة:',
+            questionParts: [
+                 { type: 'text', value: `${num1} × ${num2} ≈ ` }
+            ],
+            answer,
+            options: finalOptions.sort(() => Math.random() - 0.5)
+        };
+    } else {
+        // Division patterns: 3600 ÷ 60 = 60
+         const baseDivisor = randomInt(2, 9);
+         const baseQuotient = randomInt(2, 9);
+         const baseDividend = baseDivisor * baseQuotient;
+
+         const divisorZeros = randomInt(1, 2); // e.g., 10 or 100
+         // Dividend must have at least as many zeros as divisor, plus maybe more for the quotient
+         const quotientZeros = randomInt(1, 2);
+         const dividendZeros = divisorZeros + quotientZeros;
+
+         const dividend = baseDividend * Math.pow(10, dividendZeros);
+         const divisor = baseDivisor * Math.pow(10, divisorZeros);
+         const answer = dividend / divisor;
+
+         const options = new Set<number>([answer]);
+         // Common mistakes: wrong number of zeros
+         options.add(answer * 10);
+         options.add(answer / 10);
+         options.add(baseQuotient * Math.pow(10, Math.max(0, quotientZeros - 1))); 
+         while(options.size < 4) options.add(answer + randomInt(1, 9) * Math.pow(10, quotientZeros));
+
+         return {
+            type: ProblemType.DIVISION_PATTERNS,
+            title: 'أنماط القسمة',
+            questionParts: [
+                 { type: 'text', value: `${dividend} ÷ ${divisor} = ` }
+            ],
+            answer,
+            options: Array.from(options).slice(0, 4).sort(() => Math.random() - 0.5)
+        };
     }
-    
-    return {
-        type: ProblemType.REMAINDER_INTERPRETATION,
-        title: 'مسألة كلامية',
-        questionText: scenario.template(dividend, divisor),
-        questionParts: [],
-        answer,
-        options: Array.from(options).sort(() => Math.random() - 0.5),
-    };
 };
 
-const cipherProblems: ProblemType[] = [
-    ProblemType.MULTIPLICATION_PATTERNS,
-    ProblemType.DIVISION_PATTERNS,
-    ProblemType.MULTIPLICATION_PROPERTIES,
-];
-const pathProblems: ProblemType[] = [
-    ProblemType.ESTIMATE_QUOTIENTS,
-    ProblemType.REMAINDER_INTERPRETATION,
-    ProblemType.DIVISION_PATTERNS,
-];
-const vaultProblems: ProblemType[] = [
-    ProblemType.ESTIMATE_PRODUCTS,
-    ProblemType.MULTIPLICATION_PATTERNS,
-    ProblemType.ESTIMATE_QUOTIENTS,
-];
+// Stage 3: Vault (Distributive property)
+const generateVaultProblem = (): Problem => {
+     // Distributive property: 5 x 104 = (5 x 100) + (5 x 4) = 500 + 20 = 520
+     const n1 = randomInt(3, 9);
+     const n2_hundreds = randomInt(1, 9) * 100;
+     const n2_units = randomInt(1, 9);
+     const n2 = n2_hundreds + n2_units;
+     const answer = n1 * n2;
 
+     const options = new Set<number>([answer]);
+     // Common mistakes
+     options.add(n1 * n2_hundreds + n2_units); // Forgot to distribute to the second part: 5 * 104 -> 500 + 4 = 504
+     options.add(n1 * 100 + n1 * n2_units); // Wrong base: 5*100 + 5*4 = 520 (coincidentally same sometimes, but logically wrong if n2_hundreds != 100)
+     options.add((n1+1) * n2);
+     
+     while(options.size < 4) {
+        const noise = randomInt(1, 5) * 10;
+        const fake = answer + (Math.random() > 0.5 ? noise : -noise);
+        if (fake > 0) options.add(fake);
+     }
 
-export const generateNewProblem = (stage: 'cipher' | 'path' | 'vault'): Problem => {
-    let allowedTypes: ProblemType[];
-    switch (stage) {
-        case 'cipher': allowedTypes = cipherProblems; break;
-        case 'path': allowedTypes = pathProblems; break;
-        case 'vault': allowedTypes = vaultProblems; break;
-        default: allowedTypes = Object.values(ProblemType).filter(p => typeof p === 'number') as ProblemType[];
-    }
-    
-    const type = randomElement(allowedTypes);
-
-    switch (type) {
-        case ProblemType.MULTIPLICATION_PATTERNS: return generateMultiplicationPattern();
-        case ProblemType.DIVISION_PATTERNS: return generateDivisionPattern();
-        case ProblemType.ESTIMATE_PRODUCTS: return generateEstimateProduct();
-        case ProblemType.ESTIMATE_QUOTIENTS: return generateEstimateQuotient();
-        case ProblemType.MULTIPLICATION_PROPERTIES: return generateMultiplicationProperty();
-        case ProblemType.REMAINDER_INTERPRETATION: return generateRemainderInterpretation();
-        default: return generateMultiplicationPattern(); // Fallback
-    }
+     return {
+        type: ProblemType.DISTRIBUTIVE_PROPERTY,
+        title: 'خاصية التوزيع',
+        questionText: `استخدم خاصية التوزيع لحساب: ${n1} × (${n2_hundreds} + ${n2_units})`,
+        questionParts: [
+             { type: 'text', value: `${n1} × ${n2} = ` }
+        ],
+        answer,
+        options: Array.from(options).slice(0, 4).sort(() => Math.random() - 0.5)
+    };
 };
